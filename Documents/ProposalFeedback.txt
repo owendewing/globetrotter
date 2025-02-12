@@ -1,0 +1,24 @@
+CMSI 4072 Spring 2025
+Project Proposal Feedback
+Project: Globetrotter
+=========================
+Proposal Document [2 points]:
+   Good job on the proposal document.  You have described what you want to
+   do and why you have made some of the preliminary design decisions that
+   are mentioned.  Your justification section is good too, since you mention
+   the challenge of taking on integration of some new technologies with
+   which you are not as familiar.
+
+Proposal Presentation [3 points]:
+   Your proposal presentation was great.  I like the graphics you selected,
+   and your layout is nice and clean.  Mixing up the background color is a
+   nice idea, too.
+
+   You mention filtering the results, but I don't actually see that in your
+   proposal document.  Maybe I missed it....
+
+Summary:
+--------
+Total:  5% out of 5% for this deliverable.
+
+Nice job overall!  Great start to the semester so keep it up!
