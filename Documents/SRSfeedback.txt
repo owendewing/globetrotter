@@ -1,0 +1,35 @@
+
+New Individual Project
+Documentation Feedback ~ Deliverable #2
+Software Requirements Specification &
+Initial Development Schedule
+CMSI 4072 Spring 2025
+=======================================
+
+COMPONENT BREAKDOWN:
+   Not required for this semester's exercise
+
+FUNCTIONAL REQUIREMENTS:
+   These are excellent!  The way you broke the software into CSC's is perfect
+   for your project.  The only thing I would add is try to think to the next
+   layer of granularity, meaning you'll need a few more requirements in each
+   section.  You are VERY close, though.
+
+PERFORMANCE REQUIREMENTS:
+   These are excellent!  Good job on this section, nothing else needed.
+
+ENVIRONMENT REQUIREMENTS:
+   These are find, too.  Good job on this section, nothing else needed.
+
+OVERALL ASSESSMENT:
+   Category                          Points
+   Component Breakdown                 2/2
+   Functional Requirements             5/5
+   Performance Requirements            2/2
+   Environment Requirements            1/1
+                                     =====
+   Subtotal                          10/10
+   ------------------------------------------------------
+   Total Percentage:   10/10 = 100% which is an A-plus
+
+Great job!
