@@ -1,2 +1,2 @@
-# mixology
+# globetrotter
 Senior Project
