@@ -42,7 +42,7 @@ export default function SignUpScreen() {
             Alert.alert("Please input a full name.");
             return;
         }
-        if (email!="" && !email.includes("@")) {
+        if (email === "" || !email.includes("@")) {
             Alert.alert("Please input a valid email.");
             return;
         }
