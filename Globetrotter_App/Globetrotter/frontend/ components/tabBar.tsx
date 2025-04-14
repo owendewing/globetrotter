@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { TabView, SceneMap, TabBar, TabBarProps } from "react-native-tab-view";
 import ReusableButton from "./buttons";
 import { Ionicons } from "@expo/vector-icons";
+import { ReusableModal } from "./modal";
 
 const wishlistRoute = () => {
   const [wishlistInputs, setWishlistInputs] = useState([{ itinerary: "" }]);
@@ -37,7 +39,7 @@ const wishlistRoute = () => {
   return (
     <ScrollView
       style={{
-        backgroundColor: "#fff",
+        backgroundColor: "#F2F2F2",
         flex: 1,
         height: "100%",
         paddingHorizontal: 20,
@@ -71,7 +73,7 @@ const wishlistRoute = () => {
                 style={{ marginLeft: 5 }}
               />
               <TextInput
-                placeholder="London, Egypt, Asia, etc"
+                placeholder="Enter a destination"
                 placeholderTextColor={"#444"}
                 onChangeText={(e) => {
                   handleItineraryChange(e, index);
@@ -154,11 +156,183 @@ const wishlistRoute = () => {
   );
 };
 
-const savedTripsRoute = () => (
-  <View style={[styles.scene, { backgroundColor: "#fff" }]}>
-    <Text>Second Tab</Text>
-  </View>
-);
+const savedTripsRoute = () => {
+  const [itineraries, setSavedItineraries] = useState<Itinerary[]>([]);
+  const [refresh, setRefresh] = useState(false);
+  const [selectedItineraryIndex, setSelectedItineraryIndex] =
+    useState<Itinerary | null>(null);
+  const closeModal = () => setSelectedItineraryIndex(null);
+  useEffect(() => {
+    fetchSavedItineraries();
+  }, []);
+
+  const onRefresh = () => {
+    setRefresh(true);
+    fetchSavedItineraries();
+    setRefresh(false);
+  };
+
+  const fetchSavedItineraries = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/get-saved-itineraries"
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server error:", errorData.message);
+        return;
+      }
+      const data = await response.json();
+      console.log("Saved itineraries:", data);
+      setSavedItineraries(data.itineraries);
+    } catch (error) {
+      console.error("Error fetching saved itineraries:", error);
+    }
+  };
+
+  const deleteItinerary = () => {
+    console.log("hi");
+  };
+
+  interface DayPlan {
+    day: number;
+    location: string;
+    activities: string[];
+    accommodation: string;
+  }
+
+  interface Itinerary {
+    title: string;
+    description: string;
+    destination: string;
+    days: DayPlan[];
+  }
+
+  interface ItineraryResponse {
+    itineraries: Itinerary[];
+  }
+
+  return (
+    <ScrollView
+      style={[styles.scene, { backgroundColor: "#F2F2F2" }]}
+      refreshControl={
+        <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+      }
+    >
+      <Text
+        style={{
+          paddingHorizontal: 20,
+          fontSize: 22,
+          fontWeight: 600,
+          marginTop: 15,
+        }}
+      >
+        Your Saved Trips
+      </Text>
+      <Text
+        style={{
+          paddingHorizontal: 20,
+          fontSize: 14,
+          color: "#444",
+          marginTop: 5,
+        }}
+      >
+        Click on a trip to view more details.
+      </Text>
+      <View>
+        {itineraries.length === 0 && (
+          <Text
+            style={{
+              fontSize: 18,
+              color: "#000",
+              marginTop: 20,
+              paddingHorizontal: 20,
+            }}
+          >
+            No saved itineraries yet.
+          </Text>
+        )}
+        {itineraries.map((itinerary, index) => (
+          <View key={index} style={{ flexDirection: "row", marginLeft: 10 }}>
+            <ReusableButton
+              style={{
+                backgroundColor: "white",
+                width: 320,
+                height: 70,
+                paddingHorizontal: 10,
+                alignSelf: "center",
+                marginRight: 30,
+              }}
+              onPress={() => setSelectedItineraryIndex(index)}
+            >
+              <Text style={{ fontSize: 18, fontWeight: "600" }}>
+                {itinerary.title}
+              </Text>
+
+              <Text style={{ fontSize: 14, color: "#666", marginTop: 2 }}>
+                Destination: {itinerary.destination}
+              </Text>
+            </ReusableButton>
+            <ReusableModal
+              visible={selectedItineraryIndex === index}
+              onClose={closeModal}
+            >
+              <ScrollView>
+                <View
+                  key={index}
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "flex-start",
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 30, fontWeight: 700 }}>
+                    Travel Itinerary
+                  </Text>
+                  <Text style={{ fontSize: 20, marginBottom: 10 }}>
+                    Destination: {itinerary.destination}
+                  </Text>
+
+                  {itinerary.days.map((dayPlan, index) => (
+                    <View key={index} style={{ marginBottom: 8, marginTop: 8 }}>
+                      <Text
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: 18,
+                          color: "#328640",
+                        }}
+                      >
+                        Day {index + 1}: {dayPlan.location}
+                      </Text>
+                      <Text style={{ lineHeight: 18 }}>
+                        Accommodation: {dayPlan.accommodation}
+                      </Text>
+                      <Text style={{ lineHeight: 18 }}>Activities:</Text>
+                      {dayPlan.activities.map((activity, idx) => (
+                        <Text style={{ lineHeight: 19 }} key={idx}>
+                          - {activity}
+                        </Text>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </ReusableModal>
+            <ReusableButton onPress={deleteItinerary}>
+              <Ionicons
+                name="trash"
+                size={20}
+                color="#444"
+                style={{ marginTop: 10, marginLeft: -5 }}
+              />
+            </ReusableButton>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+};
 export default function TabViewExample() {
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
@@ -200,9 +374,7 @@ export default function TabViewExample() {
 const styles = StyleSheet.create({
   scene: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    color: "#fff",
+    // color: "#fff",
   },
   wishlistHeader: {
     textAlign: "center",

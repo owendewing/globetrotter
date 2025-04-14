@@ -8,8 +8,11 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import ReusableButton from "@/ components/buttons";
-import { TravelModal } from "@/ components/travelModal";
+import { ReusableModal } from "@/ components/modal";
 import { MyForm } from "@/ components/travelForm";
+import { ResultsForm } from "@/ components/resultsForm";
+import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator } from "react-native";
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -19,6 +22,7 @@ export default function HomeScreen() {
     null
   );
   const [itineraryModalVisible, setItineraryModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   interface FormData {
     avoidDestinations?: string;
@@ -46,6 +50,7 @@ export default function HomeScreen() {
 
   const handleFormSubmit = async (formData: FormData) => {
     try {
+      setLoading(true);
       const processedData = { ...formData };
 
       if (processedData.avoidDestinations) {
@@ -69,6 +74,7 @@ export default function HomeScreen() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(processedData),
       });
 
@@ -99,6 +105,30 @@ export default function HomeScreen() {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       alert(`Failed to generate itinerary: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveItinerary = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/save-itinerary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ itinerary: selectedItinerary }),
+      });
+
+      if (!response) {
+        throw new Error("No response from server");
+      }
+
+      alert("Itinerary saved successfully!");
+    } catch (error) {
+      console.log("Error:", error);
+      alert(`Failed to save itinerary: ${error}`);
     }
   };
 
@@ -111,61 +141,120 @@ export default function HomeScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Globetrotter</Text>
-      </View>
-      <View style={styles.formContainer}>
+
         <Text style={styles.formText}>
           Fill out this form to generate an itinerary for your next trip!
         </Text>
-        <ReusableButton
-          title="Create an Itinerary"
-          onPress={modalPress}
-          style={{
-            backgroundColor: "white",
-            marginTop: 140,
-            marginRight: 200,
-            width: 180,
-            height: 45,
-            boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.3)",
-          }}
-          textStyle={{ color: "#328640", fontSize: 18, fontWeight: "600" }}
-        />
-      </View>
-
-      {itineraries.length > 0 && (
-        <View style={styles.itineraryContainer}>
-          <Text style={{ color: "white", fontSize: 20, fontWeight: 600 }}>
-            Generated Itineraries
-          </Text>
-          {itineraries.map((item, index) => (
-            <ReusableButton
-              key={index}
-              title={`Itinerary ${index + 1}: ${item.destination}`}
-              onPress={() => {
-                setSelectedItinerary(item);
-                setItineraryModalVisible(true);
-              }}
-              style={{
-                backgroundColor: "white",
-                marginVertical: 8,
-                width: 250,
-                alignSelf: "center",
-              }}
-              textStyle={{
-                color: "#328640",
-                fontSize: 18,
-                fontWeight: "600",
-              }}
-            />
-          ))}
+        <View style={{ alignItems: "center" }}>
+          <ReusableButton
+            title="Create an Itinerary"
+            onPress={modalPress}
+            style={{
+              backgroundColor: "#328640",
+              marginTop: 50,
+              width: 350,
+              height: 52,
+            }}
+            textStyle={{ color: "white", fontSize: 20, fontWeight: "700" }}
+          />
         </View>
-      )}
 
-      <TravelModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      >
-        <MyForm onSubmit={handleFormSubmit}></MyForm>
-      </TravelModal>
+        {itineraries.length > 0 && (
+          <View style={styles.itineraryContainer}>
+            <Text style={{ color: "black", fontSize: 20, fontWeight: 500 }}>
+              Generated Itineraries
+            </Text>
+            {itineraries.map((item, index) => (
+              <ReusableButton
+                key={index}
+                // title={`Itinerary ${index + 1}: ${item.destination}`}
+                onPress={() => {
+                  setSelectedItinerary(item);
+                  setItineraryModalVisible(true);
+                  console.log(item.days);
+                }}
+                style={{
+                  backgroundColor: "white",
+                  marginVertical: 0,
+                  width: 350,
+                  height: 70,
+                  alignSelf: "center",
+                }}
+                textStyle={{
+                  color: "#328640",
+                  fontSize: 18,
+                  fontWeight: "600",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        marginTop: -5,
+                        paddingHorizontal: 10,
+                        fontSize: 15,
+                      }}
+                    >
+                      Itinerary {index + 1}
+                    </Text>
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 22,
+                        marginHorizontal: 10,
+                        marginTop: 0,
+                      }}
+                    >
+                      {item.destination}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    style={{ marginTop: 10, paddingHorizontal: 10 }}
+                    name="arrow-forward"
+                    size={20}
+                    color="black"
+                  />
+                </View>
+              </ReusableButton>
+            ))}
+          </View>
+        )}
+
+        <ReusableModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+        >
+          {loading ? (
+            <View style={styles.modalSpinnerContainer}>
+              <ActivityIndicator size="large" color="#328640" />
+            </View>
+          ) : (
+            <MyForm onSubmit={handleFormSubmit} />
+          )}
+        </ReusableModal>
+
+        <ReusableModal
+          visible={itineraryModalVisible}
+          onClose={() => setItineraryModalVisible(false)}
+        >
+          {selectedItinerary && (
+            <ResultsForm
+              itinerary={selectedItinerary}
+              onSubmit={handleSaveItinerary}
+            ></ResultsForm>
+          )}
+        </ReusableModal>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#328640" />
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -175,31 +264,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: "white",
-    height: 200,
+    height: "100%",
   },
   headerText: {
-    fontWeight: "600",
-    fontSize: 40,
+    fontWeight: "700",
+    fontSize: 60,
     color: "#328640",
-    marginTop: 150,
+    marginTop: 200,
     marginLeft: 10,
-  },
-  formContainer: {
-    height: 300,
-    backgroundColor: "#4C809C",
-    alignItems: "center",
+    textAlign: "center",
   },
   formText: {
-    color: "white",
+    color: "black",
     fontSize: 20,
-    marginTop: 50,
-    fontWeight: "600",
+    marginTop: 30,
+    fontWeight: "400",
     width: 380,
-    marginRight: 10,
+    marginLeft: 22,
+    paddingHorizontal: 20,
+    lineHeight: 25,
   },
   itineraryContainer: {
-    backgroundColor: "#4C809C",
     padding: 20,
     borderRadius: 10,
     marginTop: 20,
@@ -220,5 +305,23 @@ const styles = StyleSheet.create({
   },
   itineraryItem: {
     marginBottom: 10,
+  },
+  loadingOverlay: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    zIndex: 1000,
+  },
+  modalSpinnerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
 });

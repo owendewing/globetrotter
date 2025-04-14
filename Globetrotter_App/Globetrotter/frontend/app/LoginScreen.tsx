@@ -19,11 +19,12 @@ export default function LoginScreen() {
   };
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5000/login", {
+      const response = await fetch("http://localhost:5000//login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ identifier, password }),
       });
       const data = await response.json();
@@ -89,11 +90,13 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: 20,
     flex: 1,
     backgroundColor: "#4C809C",
   },
   backButton: {
-    marginTop: -50,
+    width: 50,
+    height: 50,
   },
   title: {
     color: "#fff",

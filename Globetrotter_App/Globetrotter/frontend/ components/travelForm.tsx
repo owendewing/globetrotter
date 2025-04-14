@@ -26,6 +26,7 @@ export const MyForm = ({ onSubmit }: myFormProps) => {
   const [selectedBiome, setSelectedBiome] = useState("");
   const [selectedContinents, setSelectedContinents] = useState<any[]>([]);
   const [avoidDestinations, setAvoidDestinations] = useState("");
+  const [sliderValue, setSliderValue] = useState(50);
 
   const items = [
     { label: "Party/Bachelorette", value: "party" },
@@ -74,7 +75,8 @@ export const MyForm = ({ onSubmit }: myFormProps) => {
       tripType: selectedItem,
       tripLength: tripLength,
       departureDate: departureDate,
-      weather: selectedWeather,
+      temperature: sliderValue,
+      // weather: selectedWeather,
       biome: selectedBiome,
       continents: selectedContinents,
       avoidDestinations: avoidDestinations,
@@ -160,17 +162,36 @@ export const MyForm = ({ onSubmit }: myFormProps) => {
             </Text>
           </View>
 
-          <View style={styles.optionContainer}>
-            <Text style={styles.label}>Temperature Preference:</Text>
+          <View style={{}}>
+            <Text style={[styles.label, { marginTop: 15 }]}>
+              Temperature Preference:
+            </Text>
+            {/* <Text>Value: {sliderValue.toFixed(2)}</Text> */}
             <Slider
-              style={{ width: 120, height: 40 }}
+              style={{ width: 300, height: 40 }}
               minimumValue={0}
-              maximumValue={1}
+              maximumValue={100}
               minimumTrackTintColor="#40c5f4"
               maximumTrackTintColor="#f04048"
+              value={sliderValue}
+              onValueChange={(value) => setSliderValue(value)}
+              step={10}
+              thumbTintColor="#eee"
             />
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: -12,
+                marginRight: 0,
+              }}
+            >
+              <Text style={{ color: "#444", fontSize: 12 }}>Cold (0° F)</Text>
+              <Text style={{ color: "#444", fontSize: 12 }}>Warm (50° F)</Text>
+              <Text style={{ color: "#444", fontSize: 12 }}>Hot (100° F)</Text>
+            </View>
           </View>
-          <Text style={[styles.label, { marginTop: 10 }]}>
+          {/* <Text style={[styles.label, { marginTop: 10 }]}>
             Weather Preferences:
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -180,7 +201,7 @@ export const MyForm = ({ onSubmit }: myFormProps) => {
               onSelect={handleWeatherSelect}
               selectedValue={selectedWeather}
             ></Dropdown>
-          </View>
+          </View> */}
           <Text style={[styles.label, { marginTop: 15 }]}>Biome:</Text>
 
           <Dropdown

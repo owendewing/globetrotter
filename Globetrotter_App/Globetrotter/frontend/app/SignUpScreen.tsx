@@ -45,7 +45,7 @@ export default function SignUpScreen() {
       return;
     }
     try {
-      const response = await fetch("http://127.0.0.1:5000/register", {
+      const response = await fetch("http://localhost:5000/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   backButton: {
-    marginTop: -50,
+    width: 50,
+    height: 50,
   },
   title: {
     color: "#fff",
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   welcomeContainer: {
-    marginTop: 40,
+    marginTop: -20,
     marginLeft: 40,
   },
   welcomeText: {

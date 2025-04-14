@@ -3,17 +3,13 @@ import { Modal, Text, View, TouchableOpacity, ScrollView } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-interface travelModalProps {
+interface ModalProps {
   visible: boolean;
   onClose: () => void;
   children?: React.ReactNode;
 }
 
-export const TravelModal = ({
-  visible,
-  onClose,
-  children,
-}: travelModalProps) => {
+export const ReusableModal = ({ visible, onClose, children }: ModalProps) => {
   return (
     <Modal
       animationType="slide"

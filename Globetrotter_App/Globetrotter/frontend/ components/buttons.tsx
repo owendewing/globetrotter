@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 interface reusableButtonProps {
-  title: string;
+  title?: string;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;

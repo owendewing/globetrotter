@@ -20,7 +20,7 @@ export default function ProfileScreen() {
   const fetchUserData = async () => {
     try {
       const response = await axios.get<{ user: User }>(
-        "http://127.0.0.1:5000/get-current-user",
+        "http://localhost:5000/get-current-user",
         {
           withCredentials: true,
           headers: {

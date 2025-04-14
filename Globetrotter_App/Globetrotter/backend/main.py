@@ -7,16 +7,25 @@ import bcrypt
 import openai
 from openai import OpenAI
 import os
+import json
 from dotenv import load_dotenv
+from datetime import timedelta
 
 
 app = Flask(__name__)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 CORS(app, supports_credentials=True, resources={
     r"/*": {
         "origins": [
-            "http://127.0.0.1:5000"
+            "http://127.0.0.1:5000",
+            "http://localhost:5000",
+            "exp://192.168.1.217:8081",
+            "http://192.168.1.217:8081",
         ],
-        "allow_headers": ["Content-Type", "Authorization"],
+        "allow_headers": ["Content-Type", "Authorization", "Cookie"],
         "allow_methods": ["GET", "POST", "PUT", "DELETE"],
         "expose_headers": ["Set-Cookie"],
         "supports_credentials": True
@@ -81,6 +90,8 @@ def login():
         
         if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
             session['user_id'] = user['id']
+            session.permanent = True
+            print("Session after login:", session)
             return jsonify({'message': 'Login successful!'}), 200
         else:
             return jsonify({'message': 'Invalid email/username or password!'}), 401
@@ -139,7 +150,8 @@ def generate_itinerary():
         trip_type = form_data.get('tripType', '')
         trip_length = form_data.get('tripLength', 1)
         departure_date = form_data.get('departureDate', '')
-        weather_pref = form_data.get('weather', '')
+        # weather_pref = form_data.get('weather', '')
+        temperature_pref = form_data.get('temperature', '')
         biome_pref = form_data.get('biome', '')
         continents = form_data.get('continents', [])
         avoid_destinations = form_data.get('avoidDestinations', '')
@@ -153,9 +165,9 @@ def generate_itinerary():
         Trip Type: {trip_type}
         Trip Length: {trip_length} days
         Departure Date: {departure_date}
-        Weather Preference: {weather_pref}
         Preferred Biome/Environment: {biome_pref}
         Preferred Continents: {continents_str}
+        Temperature Preference: {temperature_pref}
         Places to Avoid: {avoid_destinations}
 
         IMPORTANT: Return ONLY a valid JSON object with this exact structure:
@@ -224,6 +236,79 @@ def generate_itinerary():
             'message': 'An error occurred while generating your itinerary',
             'error': str(e)
         }), 500
+
+@app.route('/save-itinerary', methods=["POST"])
+def save_itinerary():
+    print("Session data:", session)
+    if 'user_id' not in session:
+        return jsonify({'message': 'User not logged in'}), 401
+
+    user_id = session['user_id']
+    itinerary = request.json["itinerary"]
+    print("Received itinerary:", itinerary)
+
+    if not itinerary:
+        return jsonify({'message': 'No itinerary provided'}), 400
+
+    try:
+        cur = MySQL.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("INSERT into saved_itineraries (user_id, title, description, destination) VALUES (%s, %s, %s, %s)",
+        (user_id, itinerary['title'], itinerary['description'], itinerary['destination'])
+        )
+        itinerary_id = cur.lastrowid
+
+        for day in itinerary['days']:
+            cur.execute("INSERT into itinerary_days (itinerary_id, day_number, location, activities, accommodation) VALUES (%s, %s, %s, %s, %s)",
+            (itinerary_id, day['day'], day['location'], json.dumps(day['activities']), day['accommodation'])
+            )
+        MySQL.connection.commit()
+        cur.close()
+        return jsonify({'message': 'Itinerary saved successfully!'}), 201
+    except Exception as e:
+        print(f"Error saving itinerary: {e}")
+        return jsonify({'message': 'An error occurred while saving the itinerary!'}), 500
+            
+
+@app.route('/get-saved-itineraries', methods=['GET'])
+def get_saved_itineraries():
+    try:
+        if 'user_id' not in session:
+            return jsonify({'message': 'User not logged in'}), 401
+
+        user_id = session['user_id']
+        cur = MySQL.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT id, title, description, destination FROM saved_itineraries WHERE user_id = %s", [user_id])
+        itineraries = cur.fetchall()
+        cur.close()
+        if not itineraries:
+            return jsonify({'message': 'No saved itineraries found'}), 404
+        itinerary_list = []
+        for itinerary in itineraries:
+            cur = MySQL.connection.cursor(MySQLdb.cursors.DictCursor)
+            cur.execute("SELECT day_number, location, activities, accommodation FROM itinerary_days WHERE itinerary_id = %s", [itinerary['id']])
+            days = cur.fetchall()
+            for day in days:
+                try:
+                    day['activities'] = json.loads(day['activities'])
+                except Exception as e:
+                    print(f"Error parsing activities JSON: {e}")
+            day['activities'] = []
+            itinerary['days'] = days
+            itinerary_list.append(itinerary)
+        return jsonify({
+            'itineraries': itinerary_list
+        }), 200
+    except Exception as e:
+        print(f"Error fetching user data: {e}")
+        return jsonify({'message': 'An error occurred while fetching user data'}), 500
+
+@app.after_request
+def apply_cors_headers(response):
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
