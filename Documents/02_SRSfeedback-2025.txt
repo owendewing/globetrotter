@@ -19,7 +19,7 @@ PERFORMANCE REQUIREMENTS:
    These are excellent!  Good job on this section, nothing else needed.
 
 ENVIRONMENT REQUIREMENTS:
-   These are find, too.  Good job on this section, nothing else needed.
+   These are fine, too.  Good job on this section, nothing else needed.
 
 OVERALL ASSESSMENT:
    Category                          Points
@@ -45,9 +45,13 @@ Software Requirements Specification Complete
 
 OVERALL ASSESSMENT:
            Category                                Points
-   Comments from first submission incorporated       8/8
+   Comments from first submission incorporated       5/8
    Spelling and Grammar in document acceptable       2/2
                                                    =====
-   Subtotal                                        10/10
+   Subtotal                                          7/10
    ------------------------------------------------------
-   Total Percentage:   10/10 = 100% which is an A-plus
+   Total Percentage:   7/10 = 70% which is a C on this deliverable
+
+I don't see any new requirements added on this second submission as was
+specified in the previous feedback.  You do impressive work, though, so
+you earn most of the credit for this deliverable.
