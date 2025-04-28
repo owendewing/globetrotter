@@ -236,6 +236,107 @@ def generate_itinerary():
             'message': 'An error occurred while generating your itinerary',
             'error': str(e)
         }), 500
+    
+@app.route('/generate-wishlist-itinerary', methods=['POST'])
+def generate_wishlist_itinerary():
+    from openai import OpenAI
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set in environment")
+
+    client = OpenAI(api_key=api_key)
+
+    print("Raw request data:", request.data)
+    if not request.is_json:
+        print("Request is not JSON")
+        return jsonify({'message': 'Missing JSON in request'}), 400
+        
+    try:
+        form_data = request.get_json()
+        print("Parsed JSON data:", form_data)
+        if not form_data:
+            return jsonify({'message': 'No form data provided'}), 400
+            
+        destination = form_data.get('destination', '')    
+        trip_type = form_data.get('tripType', '')
+        trip_length = form_data.get('tripLength', 1)
+        departure_date = form_data.get('departureDate', '')
+
+        prompt = f"""
+        Generate 3 travel itineraries based on these preferences:
+
+        Destination: {destination}
+        Trip Type: {trip_type}
+        Trip Length: {trip_length} days
+        Departure Date: {departure_date}
+
+        IMPORTANT: Return ONLY a valid JSON object with this exact structure:
+        {{
+          "itineraries": [
+            {{
+              "title": "Itinerary 1 Name",
+              "description": "Brief overview of this itinerary",
+              "destination": "Main destination",
+              "days": [
+                {{
+                  "day": 1,
+                  "location": "City/Area name",
+                  "activities": [
+                    "Morning: Activity description",
+                    "Afternoon: Activity description",
+                    "Evening: Activity description"
+                  ],
+                  "accommodation": "Recommended accommodation type"
+                }},
+                // Additional days here
+              ]
+            }},
+            // Additional itineraries (total of 3)
+          ]
+        }}
+
+        DO NOT include any text outside the JSON structure.
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a travel planning assistant that creates detailed personalized itineraries in structured JSON format only."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            max_tokens=2000
+        )
+        
+        content = response.choices[0].message.content
+        
+        
+        import json
+        try:
+            itinerary_data = json.loads(content)
+            
+            if "itineraries" not in itinerary_data or not isinstance(itinerary_data["itineraries"], list):
+                raise ValueError("Invalid response structure")
+                
+            return jsonify({
+                'message': 'Itinerary generated successfully',
+                'itinerary': itinerary_data
+            }), 200
+            
+        except json.JSONDecodeError:
+            print(f"Failed to parse JSON from response: {content}")
+            return jsonify({
+                'message': 'Failed to generate valid itinerary format',
+                'error': 'Invalid JSON response'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error generating itinerary: {str(e)}")
+        return jsonify({
+            'message': 'An error occurred while generating your itinerary',
+            'error': str(e)
+        }), 500
+
 
 @app.route('/save-itinerary', methods=["POST"])
 def save_itinerary():
@@ -301,6 +402,8 @@ def get_saved_itineraries():
     except Exception as e:
         print(f"Error fetching user data: {e}")
         return jsonify({'message': 'An error occurred while fetching user data'}), 500
+
+
 
 @app.after_request
 def apply_cors_headers(response):

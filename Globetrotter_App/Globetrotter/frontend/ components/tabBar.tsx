@@ -14,9 +14,49 @@ import { TabView, SceneMap, TabBar, TabBarProps } from "react-native-tab-view";
 import ReusableButton from "./buttons";
 import { Ionicons } from "@expo/vector-icons";
 import { ReusableModal } from "./modal";
+import { useRouter } from "expo-router";
+import { ShortenedForm } from "./shortenedForm";
 
+export function ShortForm({ onSubmit, destination }) {
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/generate-wishlist-itinerary",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ destination }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate itinerary");
+      }
+
+      const data = await response.json();
+      console.log("Generated wishlist itinerary:", data.itinerary);
+
+      onSubmit(data.itinerary.itineraries); // <-- Call parent's onSubmit with itineraries
+    } catch (error) {
+      console.error(error);
+      alert("Failed to generate wishlist itinerary");
+    }
+  };
+
+  return (
+    <View>
+      {/* Your inputs/buttons */}
+      <ReusableButton title="Generate" onPress={handleSubmit} />
+    </View>
+  );
+}
 const wishlistRoute = () => {
   const [wishlistInputs, setWishlistInputs] = useState([{ itinerary: "" }]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedWishlist, setSelectedWishlist] = useState<string | null>(null);
 
   const addWishlistItem = () => {
     setWishlistInputs([...wishlistInputs, { itinerary: "" }]);
@@ -33,8 +73,52 @@ const wishlistRoute = () => {
     list[index] = { itinerary: text };
     setWishlistInputs(list);
   };
+  const router = useRouter();
 
-  const createItineraryWithWishlist = () => {};
+  const createItineraryWithWishlist = (wishlistInputs) => {
+    if (wishlistInputs.length === 0) {
+      alert("Please enter at least one destination.");
+      return;
+    }
+    setModalVisible(true);
+  };
+
+  export function ShortenedForm({ onSubmit, destination }) {
+    const handleSubmit = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/generate-wishlist-itinerary",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ destination }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to generate itinerary");
+        }
+
+        const data = await response.json();
+        console.log("Generated wishlist itinerary:", data.itinerary);
+
+        onSubmit(data.itinerary.itineraries); // <-- Call parent's onSubmit with itineraries
+      } catch (error) {
+        console.error(error);
+        alert("Failed to generate wishlist itinerary");
+      }
+    };
+
+    return (
+      <View>
+        {/* Your inputs/buttons */}
+        <ReusableButton title="Generate" onPress={handleSubmit} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -95,7 +179,16 @@ const wishlistRoute = () => {
               >
                 <ReusableButton
                   title="Create"
-                  onPress={createItineraryWithWishlist}
+                  onPress={() => {
+                    if (wishlistInputs[index].itinerary.trim() === "") {
+                      alert(
+                        "Please enter a destination before creating an itinerary."
+                      );
+                      return;
+                    }
+                    setSelectedWishlist(wishlistInputs[index].itinerary);
+                    createItineraryWithWishlist(wishlistInputs);
+                  }}
                   style={{ width: 55 }}
                   textStyle={{
                     textAlign: "center",
@@ -149,6 +242,18 @@ const wishlistRoute = () => {
             >
               <Ionicons name="add" size={30} color="white" />
             </ReusableButton>
+            <ReusableModal
+              visible={modalVisible}
+              onClose={() => {
+                setModalVisible(false);
+                setSelectedWishlist(null);
+              }}
+            >
+              <ShortenedForm
+                onSubmit={() => console.log("hi")}
+                destination={selectedWishlist || ""}
+              ></ShortenedForm>
+            </ReusableModal>
           </View>
         )}
       </View>

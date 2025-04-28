@@ -1,5 +1,4 @@
 import { Modal, Text, View, TouchableOpacity, ScrollView } from "react-native";
-// import {ReusableButton} from "@/ components/buttons";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 
