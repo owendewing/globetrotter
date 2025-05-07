@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import Checkbox from "expo-checkbox";
+import { BASE_URL } from "@/constants";
 
 export default function SignUpScreen() {
   const [fullname, setFullName] = useState("");
@@ -45,7 +46,7 @@ export default function SignUpScreen() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch(`${BASE_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

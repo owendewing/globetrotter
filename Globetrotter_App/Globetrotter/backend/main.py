@@ -10,28 +10,23 @@ import os
 import json
 from dotenv import load_dotenv
 from datetime import timedelta
+import base64
+import uuid
 
 
 app = Flask(__name__)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-CORS(app, supports_credentials=True, resources={
-    r"/*": {
-        "origins": [
-            "http://127.0.0.1:5000",
-            "http://localhost:5000",
-            "exp://192.168.1.217:8081",
-            "http://192.168.1.217:8081",
-        ],
-        "allow_headers": ["Content-Type", "Authorization", "Cookie"],
-        "allow_methods": ["GET", "POST", "PUT", "DELETE"],
-        "expose_headers": ["Set-Cookie"],
-        "supports_credentials": True
-    }
-}
-)
+
+CORS(app, supports_credentials=True, origins=[
+    r"http:\/\/192\.168\.\d+\.\d+:8081",  # Default Expo dev server pattern
+    r"http:\/\/localhost:8081",           # Local development
+    r"http:\/\/127\.0\.0\.1:8081",        # Alternative localhost
+    r"exp:\/\/.*",                        # Expo Go URLs
+])
+
 
 app.secret_key = 'owendewingglobetrotter'
 
@@ -99,6 +94,37 @@ def login():
         print(f"Error during login: {e}")
         return jsonify({'message': 'An error occurred during login!'}), 500
     
+UPLOAD_FOLDER = "static/profile_pics"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route('/upload-profile-picture', methods=['POST'])
+def upload_profile_picture():
+    if 'user_id' not in session:
+        return jsonify({'message': 'User not logged in'}), 401
+
+    user_id = session['user_id']
+    data = request.json
+    base64_image = data['image']
+
+    try:
+        header, encoded = base64_image.split(",", 1)
+        file_data = base64.b64decode(encoded)
+        filename = f"{uuid.uuid4()}.jpg"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+        with open(filepath, "wb") as f:
+            f.write(file_data)
+
+        cur = MySQL.connection.cursor()
+        cur.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (filename, user_id))
+        MySQL.connection.commit()
+        cur.close()
+
+        return jsonify({'message': 'Profile picture updated successfully!'}), 200
+    except Exception as e:
+        print("Image upload failed:", e)
+        return jsonify({'message': 'Upload failed'}), 500
+
 @app.route('/get-current-user', methods=['GET'])
 def get_current_user():
     try:
@@ -107,7 +133,7 @@ def get_current_user():
 
         user_id = session['user_id']
         cur = MySQL.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute("SELECT id, full_name, username, email FROM users WHERE id = %s", [user_id])
+        cur.execute("SELECT id, full_name, username, email, profile_picture FROM users WHERE id = %s", [user_id])
         user = cur.fetchone()
         cur.close()
 
@@ -119,6 +145,7 @@ def get_current_user():
                 'id': user["id"],
                 'full_name': user['full_name'],
                 'username': user['username'], 
+                'image_url': f"http://localhost:5000/static/profile_pics/{user['profile_picture']}" if user['profile_picture'] else None
             }
         }), 200
 

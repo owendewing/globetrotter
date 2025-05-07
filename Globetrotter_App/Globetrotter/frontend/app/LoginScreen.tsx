@@ -7,6 +7,7 @@ import Input from "@/ components/inputs";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { BASE_URL } from "@/constants";
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = useState("");
@@ -19,7 +20,7 @@ export default function LoginScreen() {
   };
   const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:5000//login", {
+      const response = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

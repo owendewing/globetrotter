@@ -6,7 +6,7 @@ import {
   FlatList,
 } from "react-native";
 import { useState, useCallback } from "react";
-import React from "react";
+import * as React from "react";
 import { AntDesign } from "@expo/vector-icons";
 
 interface DropdownProps {

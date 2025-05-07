@@ -15,44 +15,9 @@ import ReusableButton from "./buttons";
 import { Ionicons } from "@expo/vector-icons";
 import { ReusableModal } from "./modal";
 import { useRouter } from "expo-router";
-import { ShortenedForm } from "./shortenedForm";
+import { BASE_URL } from "@/constants";
 
-export function ShortForm({ onSubmit, destination }) {
-  const handleSubmit = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/generate-wishlist-itinerary",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ destination }),
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error("Failed to generate itinerary");
-      }
-
-      const data = await response.json();
-      console.log("Generated wishlist itinerary:", data.itinerary);
-
-      onSubmit(data.itinerary.itineraries); // <-- Call parent's onSubmit with itineraries
-    } catch (error) {
-      console.error(error);
-      alert("Failed to generate wishlist itinerary");
-    }
-  };
-
-  return (
-    <View>
-      {/* Your inputs/buttons */}
-      <ReusableButton title="Generate" onPress={handleSubmit} />
-    </View>
-  );
-}
 const wishlistRoute = () => {
   const [wishlistInputs, setWishlistInputs] = useState([{ itinerary: "" }]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -75,51 +40,6 @@ const wishlistRoute = () => {
   };
   const router = useRouter();
 
-  const createItineraryWithWishlist = (wishlistInputs) => {
-    if (wishlistInputs.length === 0) {
-      alert("Please enter at least one destination.");
-      return;
-    }
-    setModalVisible(true);
-  };
-
-  export function ShortenedForm({ onSubmit, destination }) {
-    const handleSubmit = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/generate-wishlist-itinerary",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ destination }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to generate itinerary");
-        }
-
-        const data = await response.json();
-        console.log("Generated wishlist itinerary:", data.itinerary);
-
-        onSubmit(data.itinerary.itineraries); // <-- Call parent's onSubmit with itineraries
-      } catch (error) {
-        console.error(error);
-        alert("Failed to generate wishlist itinerary");
-      }
-    };
-
-    return (
-      <View>
-        {/* Your inputs/buttons */}
-        <ReusableButton title="Generate" onPress={handleSubmit} />
-      </View>
-    );
-  }
-
   return (
     <ScrollView
       style={{
@@ -134,9 +54,9 @@ const wishlistRoute = () => {
         <Text style={{ fontSize: 14, color: "#444", marginTop: 5 }}>
           Enter up to 5 destinations you want to visit.
         </Text>
-        <Text style={{ fontSize: 14, color: "#444", marginTop: 2 }}>
+        {/* <Text style={{ fontSize: 14, color: "#444", marginTop: 2 }}>
           Press "Create" to generate a trip itinerary.
-        </Text>
+        </Text> */}
 
         {wishlistInputs.map((itinerary, index) => (
           <View
@@ -177,7 +97,7 @@ const wishlistRoute = () => {
                   backgroundColor: "#328640",
                 }}
               >
-                <ReusableButton
+                {/* <ReusableButton
                   title="Create"
                   onPress={() => {
                     if (wishlistInputs[index].itinerary.trim() === "") {
@@ -187,7 +107,6 @@ const wishlistRoute = () => {
                       return;
                     }
                     setSelectedWishlist(wishlistInputs[index].itinerary);
-                    createItineraryWithWishlist(wishlistInputs);
                   }}
                   style={{ width: 55 }}
                   textStyle={{
@@ -195,7 +114,7 @@ const wishlistRoute = () => {
                     marginTop: -20,
                     color: "#fff",
                   }}
-                ></ReusableButton>
+                ></ReusableButton> */}
               </View>
               {wishlistInputs.length > 1 && (
                 <ReusableButton
@@ -249,10 +168,6 @@ const wishlistRoute = () => {
                 setSelectedWishlist(null);
               }}
             >
-              <ShortenedForm
-                onSubmit={() => console.log("hi")}
-                destination={selectedWishlist || ""}
-              ></ShortenedForm>
             </ReusableModal>
           </View>
         )}
@@ -279,8 +194,7 @@ const savedTripsRoute = () => {
 
   const fetchSavedItineraries = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:5000/get-saved-itineraries"
+      const response = await fetch(`${BASE_URL}/get-saved-itineraries`
       );
       if (!response.ok) {
         const errorData = await response.json();
@@ -295,8 +209,10 @@ const savedTripsRoute = () => {
     }
   };
 
-  const deleteItinerary = () => {
-    console.log("hi");
+  const deleteItinerary = (indexToDelete: number) => {
+    setSavedItineraries((prev) =>
+      prev.filter((_, index) => index !== indexToDelete)
+    );
   };
 
   interface DayPlan {
@@ -424,7 +340,7 @@ const savedTripsRoute = () => {
                 </View>
               </ScrollView>
             </ReusableModal>
-            <ReusableButton onPress={deleteItinerary}>
+            <ReusableButton onPress={() => deleteItinerary(index)}>
               <Ionicons
                 name="trash"
                 size={20}

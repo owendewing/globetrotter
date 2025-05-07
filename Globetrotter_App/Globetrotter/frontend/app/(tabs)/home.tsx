@@ -13,6 +13,7 @@ import { MyForm } from "@/ components/travelForm";
 import { ResultsForm } from "@/ components/resultsForm";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator } from "react-native";
+import { BASE_URL } from "@/constants";
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -68,7 +69,7 @@ export default function HomeScreen() {
 
       console.log("Submitting form data:", processedData);
 
-      const response = await fetch("http://localhost:5000/generate-itinerary", {
+      const response = await fetch(`${BASE_URL}/generate-itinerary`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +113,7 @@ export default function HomeScreen() {
 
   const handleSaveItinerary = async () => {
     try {
-      const response = await fetch("http://localhost:5000/save-itinerary", {
+      const response = await fetch(`${BASE_URL}/save-itinerary`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
