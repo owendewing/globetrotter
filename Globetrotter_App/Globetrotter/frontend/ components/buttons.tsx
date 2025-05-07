@@ -1,35 +1,57 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 
-
-interface LoginButtonProps {
-    title: string;
-    onPress: () => void;
-    backgroundColor?: string;
-    color?: string;
+interface reusableButtonProps {
+  title?: string;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  children?: React.ReactNode;
 }
 
-export default function LoginButton({ title, onPress, backgroundColor, color }: LoginButtonProps) {
-    return (
-        <TouchableOpacity onPress={onPress} style={[styles.authenticationButton, {backgroundColor}]}>
-            <Text style={[styles.authenticationButtonText, {color}]}>{title}</Text>
-        </TouchableOpacity>
-    );
+export default function reusableButton({
+  title,
+  onPress,
+  style,
+  textStyle,
+  children,
+}: reusableButtonProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.authenticationButton, style]}
+    >
+      {children ? (
+        children
+      ) : (
+        <Text style={[styles.authenticationButtonText, textStyle]}>
+          {title}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
-    authenticationButton: {
-        display: "flex",
-        justifyContent: "center",
-        textAlign: "center",
-        width: 340,
-        height: 50,
-        borderRadius: 15,
-        marginTop: 20
-    },
-    authenticationButtonText: {
-        fontSize: 15,
-        justifyContent: "center",
-        textAlign: "center",
-    }
-})
+  authenticationButton: {
+    display: "flex",
+    justifyContent: "center",
+    textAlign: "center",
+    width: 340,
+    height: 50,
+    borderRadius: 15,
+    marginTop: 20,
+  },
+  authenticationButtonText: {
+    fontSize: 15,
+    justifyContent: "center",
+    textAlign: "center",
+  },
+});
